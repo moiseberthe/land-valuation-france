@@ -1,5 +1,6 @@
 import dash
 from dash import Dash, html, dcc
+import dash_bootstrap_components as dbc
 
 navBarStyle = {
     'display': 'flex',
@@ -24,7 +25,7 @@ dropdownStyle = {
     'width': '200px'
 }
 
-app = Dash(__name__, use_pages=True, assets_url_path='./assets')
+app = Dash(__name__, use_pages=True, assets_url_path='./assets', external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div([
     html.Div([

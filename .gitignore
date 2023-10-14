@@ -162,3 +162,4 @@ cython_debug/
 data/
 rowdata/
 /assets/data
+.DS_Store
