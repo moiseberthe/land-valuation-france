@@ -11,3 +11,6 @@ Installez `python` en premier.
 
 ## Exécution du dashboard
 1. Placez-vous dans le dossier `dash` et exécutez la commande `python app.py`.
+
+## Exécution de l'api
+1. Placez-vous dans le dossier `api` et exécutez la commande `python app.py`.
