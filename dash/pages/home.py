@@ -9,7 +9,7 @@ years = [18, 19, 20, 21]
 frames = []
 for year in years:
     frames.append(
-        pd.read_csv(f'../assets/data/valeursfoncieres-20{year}.txt', sep='|', decimal=',', nrows=100000, low_memory=False)
+        pd.read_csv(f'../assets/data/valeursfoncieres-20{year}.txt', sep='|', decimal=',', nrows=10000, low_memory=False)
     )
 df = pd.concat(frames)
 dfC = df.copy()
@@ -135,7 +135,7 @@ layout = html.Div([
             dcc.Graph(id='pie-chart-mutation')
         ], style={ 'width' : '30%', }),
     ], style={ 'display' : 'flex', })
-])
+], className='mx-3')
 
 
 @callback(
@@ -209,12 +209,10 @@ def update_map(value, year):
     dff = df[df['annee'].isin(years)].groupby(['annee', 'code_'+scale])['Valeur fonciere'].mean().reset_index()
     dff = dfScales[scale].merge(dff, how='left', left_on='code_'+scale, right_on='code_'+scale).fillna(0)
     fig = px.choropleth(dff, geojson=geojson[scale], featureidkey='properties.code', locations='code_'+scale, color='Valeur fonciere',
-                        projection="mercator")
+                        projection="mercator", color_continuous_scale=px.colors.sequential.Blues)
     fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(showlegend=False,
                         margin={"r":0,"t":0,"l":0,"b":0},
-                        width=600, 
-                        height=500,
                     )
     return fig
 
