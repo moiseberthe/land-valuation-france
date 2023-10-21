@@ -1,3 +1,26 @@
-body {
-    background-color: red;
+.cs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: calc((100% / 3) - 8px);
+    padding: 10px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+}
+
+.cs-card .cs-card-title {
+    margin: 0;
+}
+.cs-card .cs-card-body {
+    font-size: 24px;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.select-field{
+    width: 200px;
 }

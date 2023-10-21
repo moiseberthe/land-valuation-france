@@ -77,7 +77,7 @@ layout = html.Div([
         ),
         dbc.Col(
             dbc.FormFloating([
-                dbc.Input(type='number', id='surface', placeholder='surface'),
+                dbc.Input(type='number', id='surfaces', placeholder='surface'),
                 dbc.Label('Surface'),
             ]),
             width=4
