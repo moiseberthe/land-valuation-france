@@ -1,3 +1,4 @@
+import pickle
 import pandas as pd
 import dash
 import requests
@@ -6,6 +7,18 @@ from dash import Dash, dcc, html, Input, Output, callback, State
 
 regions = pd.read_csv('../assets/data/regions.csv', sep=';')
 departements = pd.read_csv('../assets/data/departement.csv', sep=';')
+
+
+with open("../assets/models/random-forest-regressor-all.pkl", "rb") as f:
+    model = pickle.load(f)
+regresssor = model['model']
+scaler = model['scaler']
+
+def estimate(metre_carre, population, surface):
+    x = pd.DataFrame([[metre_carre,	population,	surface]], columns=regresssor.feature_names_in_)
+    x = pd.DataFrame(scaler.transform(x), columns=regresssor.feature_names_in_)
+    v = regresssor.predict(x)[0]
+    return v
 
 fields = [
     {'id': 'select-departement'},
@@ -94,9 +107,7 @@ layout = html.Div([
                 html.Span('Selon les informations fournies votre propiété est estimer à '),
                 html.Span('100000', id='valeur-fonciere', className='fw-bold'),
                 html.Span(' Euro'),
-            ],
-                width=12
-            )
+            ], width=12, id='estimation-result')
         ],className='mb-4')
     ],
     id='estimation',
@@ -122,7 +133,7 @@ def update_depts(value):
 @callback(
     [
         Output('estimation', 'className'),
-        Output('valeur-fonciere', 'children'),
+        Output('estimation-result', 'children'),
     ],
     Input('submit-val', 'n_clicks'),
     [State(f['id'], 'value') for f in fields],
@@ -134,10 +145,20 @@ def update_output(n_clicks, departement, type, surface, nbPiece):
     population = dep_info['population'].values[0]
     metre_carre = dep_info['metre carre'].values[0]
 
-    print('dep', departement, type, population, metre_carre, surface, nbPiece)
-
-    
-    return 'form-section estimate show', 100000
-    # response = requests.get(f'http://127.0.0.1:5000/estimate?nb-lot={value}&nb-piece={value2}')
+    try:
+        valeur = estimate(metre_carre, population, surface)
+        valeur = round(valeur, 2)
+        valeur = format(valeur, ',').replace(',', ' ')
+        return 'form-section estimate show', [
+                html.Span('Selon les informations fournies votre propiété est estimer à '),
+                html.Span(valeur, id='valeur-fonciere', className='fw-bold'),
+                html.Span(' Euro'),
+            ]
+    except:
+        return 'form-section estimate show', [
+                html.Span('Une erreur est survenue !! Verifiez que tous les champs sont correctement remplis ', className='alert alert-danger'),
+            ]
+        
+    # response = requests.get(f'http://127.0.0.1:5000/estimate?departement={departement}={metre_carre}&surface={surface}')
     # response = response.json()['data']
     # return f'Selon les informations fournies votre propriété est estimée à : {response}'
