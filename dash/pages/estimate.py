@@ -1,120 +1,143 @@
+import pandas as pd
 import dash
 import requests
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html, Input, Output, callback, State
 
-fields = [
-    {'type': 'number', 'label' : 'Nombre de lot', 'id': 'nb-lots'},
-    {'type': 'number', 'label' : 'Nombre de pièces principales', 'id': 'nb-pieces'}
-]
+regions = pd.read_csv('../assets/data/regions.csv', sep=';')
+departements = pd.read_csv('../assets/data/departement.csv', sep=';')
+
 fields = [
     {'id': 'select-departement'},
     {'id': 'select-type-local'},
     {'id': 'surfaces'},
     {'id': 'nb-pieces'},
 ]
-
+locatType_to_code = {
+    'Maison': 1,
+    'Appartement': 2,
+    'Dépendance': 3,
+    'Local industriel. commercial ou assimilé': 4,
+}
 dash.register_page(__name__)
-# form = dbc.Row(
-#     [
-#         dbc.Col(
-#             dbc.FormFloating([
-#                 dbc.Input(type=f['type'], id=f['id'], placeholder=f['label']),
-#                 dbc.Label(f['label']),
-#             ]),
-#             width=6,
-#         ) for f in fields
-#     ],
-#     className='mb-3',
-# )
 
 layout = html.Div([
-    html.H3('Localisation', className='mb-3'),
-    dbc.Row([
-        dbc.Col(
-            dbc.FormFloating([
-                dbc.Select(
-                    id="select-region",
-                    options=[
-                        {"label": "Option 0", "value": "0"},
-                        {"label": "Option 1", "value": "1"},
-                        {"label": "Option 2", "value": "2"},
-                    ],
-                    value='0'
-                ),
-                dbc.Label(['Région']),
-            ]),
-            width=6
-        ),
-        dbc.Col(
-            dbc.FormFloating([
-                dbc.Select(
-                    id="select-departement",
-                    options=[{"label": "Option 0", "value": "0"},],
-                    value='0'
-                ),
-                dbc.Label(['Département']),
-            ]),
-            width=6
-        ),
-    ], className='mb-5'),
-    html.H3('Caractéristiques du bien', className='mb-3'),
-    dbc.Row([
-        dbc.Col(
-            dbc.FormFloating([
-                dbc.Select(
-                    id="select-type-local",
-                    options=[
-                        {"label": "Option 0", "value": '12', 'selected': True},
-                        {"label": "Option 1", "value": "1"},
-                        {"label": "Option 2", "value": "2"},
-                    ],
-                    value='12',
-                ),
-                dbc.Label(['Type']),
-            ]),
-            width=4
-        ),
-        dbc.Col(
-            dbc.FormFloating([
-                dbc.Input(type='number', id='surfaces', placeholder='surface'),
-                dbc.Label('Surface'),
-            ]),
-            width=4
-        ),
-        dbc.Col(
-            dbc.FormFloating([
-                dbc.Input(type='number', id='nb-pieces', placeholder='surface'),
-                dbc.Label('Nombre de pièces principales'),
-            ]),
-            width=4
-        ),
-    ], className='mb-4'),
-    dbc.Button('Estimer', color='primary', id='submit-val', n_clicks=0),
+    html.H3('Estimer votre propriété', className='mb-3'),
+    html.Div([
+        html.H3('Localisation', className='mb-3'),
+        dbc.Row([
+            dbc.Col(
+                dbc.FormFloating([
+                    dbc.Select(
+                        id="select-region",
+                        options=[{'label': r['nom_region'], 'value': r['code_region']} for i, r in regions.iterrows()],
+                        value='84'
+                    ),
+                    dbc.Label(['Région']),
+                ]),
+                width=6
+            ),
+            dbc.Col(
+                dbc.FormFloating([
+                    dbc.Select(
+                        id="select-departement",
+                        options=[{"label": "Option 0", "value": "0"},],
+                        value='0'
+                    ),
+                    dbc.Label(['Département']),
+                ]),
+                width=6
+            ),
+        ], className='mb-5'),
+    ],
+    className='form-section'),
+    html.Div([
+        html.H3('Caractéristiques du bien', className='mb-3'),
+        dbc.Row([
+            dbc.Col(
+                dbc.FormFloating([
+                    dbc.Select(
+                        id="select-type-local",
+                        options=[
+                            {'label': 'Maison', 'value': 'Maison'},
+                            {'label': 'Appartement', 'value': 'Appartement'},
+                            {'label': 'Dépendance', 'value': 'Dépendance'},
+                            {'label': 'Local industriel', 'value': 'Local industriel. commercial ou assimilé'},
+                        ],
+                        value='Maison',
+                    ),
+                    dbc.Label(['Type']),
+                ]),
+                width=4
+            ),
+            dbc.Col(
+                dbc.FormFloating([
+                    dbc.Input(type='number', id='surfaces', placeholder='surface'),
+                    dbc.Label('Surface'),
+                ]),
+                width=4
+            ),
+            dbc.Col(
+                dbc.FormFloating([
+                    dbc.Input(type='number', id='nb-pieces', placeholder='surface'),
+                    dbc.Label('Nombre de pièces principales'),
+                ]),
+                width=4
+            ),
+        ], className='mb-4'),
+    ],
+    className='form-section'),
+    html.Div([
+        html.H3('Estimation', className='mb-3'),
+        dbc.Row([
+            dbc.Col([
+                html.Span('Selon les informations fournies votre propiété est estimer à '),
+                html.Span('100000', id='valeur-fonciere', className='fw-bold'),
+                html.Span(' Euro'),
+            ],
+                width=12
+            )
+        ],className='mb-4')
+    ],
+    id='estimation',
+    className='form-section estimate'),
+    
+    dbc.Button('Estimer', color='primary', className='p-3 px-5', id='submit-val', n_clicks=0),
     html.Div(id='container-button-basic')
 ], className='container')
 
 @callback(
-    Output('select-departement', 'options'),
+    [
+        Output('select-departement', 'options'),
+        Output('select-departement', 'value'),
+    ],
     Input('select-region', 'value')
 )
 def update_depts(value):
-    if(not value):
-        return []
-    return [
-        {"label": "Option 0", "value": "1", "selected": 'selected'},
-        {"label": "Option 1", "value": "1"},
-        {"label": "Option 2", "value": "2"},
-        {"label": "Disabled option", "value": "3", "disabled": True}
-    ]
+    value = 84 if value == '0' else int(value)
+    depts = departements[departements['code_region'] == value]
+    options = [{'label': r['nom_departement'], 'value': r['code_departement']} for i, r in depts.iterrows()]
+    return options, options[0]['value']
 
 @callback(
-    Output('container-button-basic', 'children'),
+    [
+        Output('estimation', 'className'),
+        Output('valeur-fonciere', 'children'),
+    ],
     Input('submit-val', 'n_clicks'),
     [State(f['id'], 'value') for f in fields],
     prevent_initial_call=True
 )
-def update_output(n_clicks, value, value2):
-    response = requests.get(f'http://127.0.0.1:5000/estimate?nb-lot={value}&nb-piece={value2}')
-    response = response.json()['data']
-    return f'Selon les informations fournies votre propriété est estimée à : {response}'
+def update_output(n_clicks, departement, type, surface, nbPiece):
+    dep_info = departements[departements['code_departement'] == departement]
+    
+    population = dep_info['population'].values[0]
+    metre_carre = dep_info['metre carre'].values[0]
+
+    print('dep', departement, type, population, metre_carre, surface, nbPiece)
+
+    
+    return 'form-section estimate show', 100000
+    # response = requests.get(f'http://127.0.0.1:5000/estimate?nb-lot={value}&nb-piece={value2}')
+    # response = response.json()['data']
+    # return f'Selon les informations fournies votre propriété est estimée à : {response}'
